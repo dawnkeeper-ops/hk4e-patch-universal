@@ -1,9 +1,7 @@
-#![feature(str_from_utf16_endian)]
-
 use std::{sync::RwLock};
 
 use lazy_static::lazy_static;
-use modules::{CcpBlocker, Misc};
+use modules::{CcpBlocker, Hoyopass, Http, Misc, WinHttp};
 use windows::Win32::System::Console;
 use windows::Win32::System::SystemServices::DLL_PROCESS_ATTACH;
 use windows::Win32::{Foundation::HINSTANCE, System::LibraryLoader::GetModuleFileNameA};
@@ -42,6 +40,9 @@ unsafe fn thread_func() {
     println!("Initializing modules...");
 
     module_manager.enable(MhyContext::<Security>::new(&exe_name));
+    module_manager.enable(MhyContext::<Hoyopass>::new(&exe_name));
+    module_manager.enable(MhyContext::<Http>::new(&exe_name));
+    module_manager.enable(MhyContext::<WinHttp>::new(&exe_name));
     marshal::find();
 
     println!("Successfully initialized!");

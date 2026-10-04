@@ -80,18 +80,23 @@ unsafe extern "win64" fn after_key_sign_check(reg: *mut Registers, _: usize) {
 }
 
 unsafe extern "win64" fn on_mhy_rsa(reg: *mut Registers, _: usize) {
-    println!("key: {:X}", *((*reg).r12 as *const u64));
-    println!("len: {:X}", (*reg).r8 -3);
+    // r8-3 = 当前 key 缓冲区长度。只有长度等于我们的公钥(0x10C=268)时才替换。
+    // 之前是无条件覆盖:实测日志里被覆盖的还有 0x4A6(1190 字节 = 2048-bit 私钥),
+    // 拿公钥盖掉私钥会直接毁掉客户端解密码区域信息/登录响应的能力。
+    let key_len = (*reg).r8.wrapping_sub(3) as usize;
 
-    if ((*reg).r8 as usize) - 3 == KEY_SIZE {
-        println!("[*] key replaced");
-
-        std::ptr::copy_nonoverlapping(
-            SERVER_PUBLIC_KEY.as_ptr(),
-            (*reg).r13 as *mut u8,
-            SERVER_PUBLIC_KEY.len(),
-        );
+    if key_len != SERVER_PUBLIC_KEY.len() {
+        println!("[*] key skipped (len={key_len:X}, ours={:X})", SERVER_PUBLIC_KEY.len());
+        return;
     }
+
+    println!("[*] key replaced (len={key_len:X})");
+
+    std::ptr::copy_nonoverlapping(
+        SERVER_PUBLIC_KEY.as_ptr(),
+        (*reg).r13 as *mut u8,
+        SERVER_PUBLIC_KEY.len(),
+    );
 }
 
 unsafe extern "win64" fn on_sdk_util_rsa_encrypt(reg: *mut Registers, _: usize) {
