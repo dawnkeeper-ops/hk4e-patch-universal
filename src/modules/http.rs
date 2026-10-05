@@ -17,7 +17,7 @@ impl MhyModule for MhyContext<Http> {
 
         let web_request_utils_make_initial_url = util::pattern_scan_il2cpp(self.assembly_name, WEB_REQUEST_UTILS_MAKE_INITIAL_URL);
         if let Some(addr) = web_request_utils_make_initial_url {
-            println!("web_request_utils_make_initial_url: {:x}", addr as usize);
+            crate::plog!("web_request_utils_make_initial_url: {:x}", addr as usize);
             self.interceptor.attach(
                 addr as usize,
                 on_make_initial_url,
@@ -25,13 +25,13 @@ impl MhyModule for MhyContext<Http> {
         }
         else
         {
-            println!("Failed to find web_request_utils_make_initial_url");
+            crate::plog!("Failed to find web_request_utils_make_initial_url");
         }
 
         let browser_load_url = util::pattern_scan_il2cpp(self.assembly_name, BROWSER_LOAD_URL);
         if let Some(addr) = browser_load_url {
             let addr_offset = addr as usize + BROWSER_LOAD_URL_OFFSET;
-            println!("browser_load_url: {:x}", addr_offset);
+            crate::plog!("browser_load_url: {:x}", addr_offset);
             self.interceptor.attach(
                 addr_offset,
                 on_browser_load_url,
@@ -39,7 +39,7 @@ impl MhyModule for MhyContext<Http> {
         }
         else
         {
-            println!("Failed to find browser_load_url");
+            crate::plog!("Failed to find browser_load_url");
         }
         
         Ok(())
@@ -69,7 +69,7 @@ unsafe extern "win64" fn on_make_initial_url(reg: *mut Registers, _: usize) {
     });
 
     if !url.contains("/query_cur_region") {
-        println!("Redirect: {url} -> {new_url}");
+        crate::plog!("Redirect: {url} -> {new_url}");
         (*reg).rcx =
             marshal::ptr_to_string_ansi(CString::new(new_url.as_str()).unwrap().as_c_str()) as u64;
     }
@@ -88,7 +88,7 @@ unsafe extern "win64" fn on_browser_load_url(reg: *mut Registers, _: usize) {
         new_url.push_str(s);
     });
 
-    println!("Browser::LoadURL: {url} -> {new_url}");
+    crate::plog!("Browser::LoadURL: {url} -> {new_url}");
 
     (*reg).rdx =
         marshal::ptr_to_string_ansi(CString::new(new_url.as_str()).unwrap().as_c_str()) as u64;

@@ -17,26 +17,26 @@ impl MhyModule for MhyContext<Hoyopass> {
         // 而当前方案是把原生 SDK 的 HTTP 引到本地 dispatch,它必须保持原样。
         let loginmanager = util::pattern_scan_il2cpp(self.assembly_name, HOYOPASS_LOGINMANAGER_INITIALIZE);
         if let Some(addr) = loginmanager {
-            println!("hoyopass_loginmanager_initialize: {:x}", addr as usize);
+            crate::plog!("hoyopass_loginmanager_initialize: {:x}", addr as usize);
             if let Err(e) = self.interceptor.attach(addr as usize, on_loginmanager) {
-                println!("attach hoyopass_loginmanager_initialize failed: {e}");
+                crate::plog!("attach hoyopass_loginmanager_initialize failed: {e}");
             }
         }
         else
         {
-            println!("Failed to find hoyopass_loginmanager_initialize");
+            crate::plog!("Failed to find hoyopass_loginmanager_initialize");
         }
 
         let sdk_init = util::pattern_scan_il2cpp(self.assembly_name, HOYOPASS_SDK_INITIALIZE);
         if let Some(addr) = sdk_init {
-            println!("hoyopass_sdk_initialize: {:x}", addr as usize);
+            crate::plog!("hoyopass_sdk_initialize: {:x}", addr as usize);
             if let Err(e) = self.interceptor.attach(addr as usize, on_sdk_init) {
-                println!("attach hoyopass_sdk_initialize failed: {e}");
+                crate::plog!("attach hoyopass_sdk_initialize failed: {e}");
             }
         }
         else
         {
-            println!("Failed to find hoyopass_sdk_initialize");
+            crate::plog!("Failed to find hoyopass_sdk_initialize");
         }
 
         Ok(())
@@ -55,12 +55,12 @@ unsafe extern "win64" fn on_loginmanager(
     _: *mut Registers,
     _: usize,
 ) {
-    println!("[hoyopass] loginmanager_initialize called");
+    crate::plog!("[hoyopass] loginmanager_initialize called");
 }
 
 unsafe extern "win64" fn on_sdk_init(
     _: *mut Registers,
     _: usize,
 ) {
-    println!("[hoyopass] sdk_initialize called");
+    crate::plog!("[hoyopass] sdk_initialize called");
 }

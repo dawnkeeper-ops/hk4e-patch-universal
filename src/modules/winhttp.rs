@@ -31,7 +31,7 @@ impl MhyModule for MhyContext<WinHttp> {
         let module = match LoadLibraryA(s!("winhttp.dll")) {
             Ok(module) => module,
             Err(_) => {
-                println!("[WinHttp] Failed to load winhttp.dll");
+                crate::plog!("[WinHttp] Failed to load winhttp.dll");
                 return Ok(());
             }
         };
@@ -39,23 +39,23 @@ impl MhyModule for MhyContext<WinHttp> {
         match GetProcAddress(module, s!("WinHttpConnect")) {
             Some(proc) => {
                 let addr = proc as usize;
-                println!("WinHttpConnect: {addr:x}");
+                crate::plog!("WinHttpConnect: {addr:x}");
                 if let Err(e) = self.interceptor.attach(addr, on_winhttp_connect) {
-                    println!("[WinHttp] attach WinHttpConnect failed: {e}");
+                    crate::plog!("[WinHttp] attach WinHttpConnect failed: {e}");
                 }
             }
-            None => println!("[WinHttp] Failed to resolve WinHttpConnect"),
+            None => crate::plog!("[WinHttp] Failed to resolve WinHttpConnect"),
         }
 
         match GetProcAddress(module, s!("WinHttpOpenRequest")) {
             Some(proc) => {
                 let addr = proc as usize;
-                println!("WinHttpOpenRequest: {addr:x}");
+                crate::plog!("WinHttpOpenRequest: {addr:x}");
                 if let Err(e) = self.interceptor.attach(addr, on_winhttp_open_request) {
-                    println!("[WinHttp] attach WinHttpOpenRequest failed: {e}");
+                    crate::plog!("[WinHttp] attach WinHttpOpenRequest failed: {e}");
                 }
             }
-            None => println!("[WinHttp] Failed to resolve WinHttpOpenRequest"),
+            None => crate::plog!("[WinHttp] Failed to resolve WinHttpOpenRequest"),
         }
 
         Ok(())
@@ -93,7 +93,7 @@ unsafe extern "win64" fn on_winhttp_connect(reg: *mut Registers, _: usize) {
 
     let n = REDIRECT_LOG_COUNT.fetch_add(1, Ordering::SeqCst);
     if n < 40 {
-        println!("[WinHttp] redirect {host}:{} -> 127.0.0.1:8088", (*reg).r8);
+        crate::plog!("[WinHttp] redirect {host}:{} -> 127.0.0.1:8088", (*reg).r8);
     }
 
     (*reg).rdx = LOCAL_HOST.as_ptr() as u64;
@@ -118,7 +118,7 @@ unsafe extern "win64" fn on_winhttp_open_request(reg: *mut Registers, _: usize) 
 
     let n = REDIRECT_LOG_COUNT.fetch_add(1, Ordering::SeqCst);
     if n < 80 {
-        println!("[WinHttp] strip TLS flag: 0x{flags:08x} -> 0x{new_flags:08x}");
+        crate::plog!("[WinHttp] strip TLS flag: 0x{flags:08x} -> 0x{new_flags:08x}");
     }
 }
 
